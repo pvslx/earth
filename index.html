@@ -121,7 +121,7 @@
 					dragOn = false
 				}
 			}
-			canvas.onmousewheel = function(e) {
+			canvas.onwheel = function(e) {
 				var c = cameraRadiusTarget * (1.1 ** Math.sign(e.deltaY))
 				if(c > 1.5 && c < 1500) {
 					cameraRadiusTarget = c
