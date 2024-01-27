@@ -250,7 +250,7 @@ var raym = program(shader(gl.VERTEX_SHADER, `
 		
 		vec3 atmos = vec3(0.4, 0.6, 1.0);
 		
-		vec3 light = vec3(sin(uTime / 10000.0), 0, cos(uTime / 10000.0));
+		vec3 light = normalize(vec3(sin(uTime / 10000.0), cos(uTime / 40000.0) * 0.25, cos(uTime / 10000.0)));
 		
 		float t;
 		vec3 i;
