@@ -255,35 +255,32 @@ var raym = program(shader(gl.VERTEX_SHADER, `
 		float t;
 		vec3 i;
 		if(sphereray(vec3(0), 1.0, eye, rd, t, i)) {
-			vec3 g = normalize(i);
+			vec3 normal = normalize(i);
+			vec3 tangent = vec3(normal.z, normal.y, -normal.x);
+			vec3 bitangent = cross(normal, tangent);
 			
-			vec2 uv = equirectangular(g);
+			vec2 uv = equirectangular(normal);
 			
-			float clouds = clamp((fbm(g * 13.0) - 1.0 + texture2D(uEarthClouds, uv).r) * 2.0, 0.0, 1.0);
+			float clouds = clamp((fbm(normal * 13.0) - 1.0 + texture2D(uEarthClouds, uv).r) * 2.0, 0.0, 1.0);
 			
 			vec3 day = mix(texture2D(uEarthDiffuse, uv).rgb, vec3(1), clouds);
 			vec3 night = mix(texture2D(uEarthNight, uv).rgb, vec3(0), clouds);
 			
-			vec3 nrm = normalize(vec3(
+			mat3 tbn = mat3(normal, tangent, bitangent);
+			
+			vec3 bumpedNormal = tbn * normalize(vec3(
 				-(texture2D(uEarthBump, uv + vec2(-0.00025, 0)).r - texture2D(uEarthBump, uv + vec2(0.00025, 0)).r),
 				0.3,
 				-(texture2D(uEarthBump, uv + vec2(0, -0.00025)).r - texture2D(uEarthBump, uv + vec2(0, 0.00025)).r)
 			));
-			vec3 tangent = vec3(g.z, g.y, -g.x);
-			vec3 bitangent = cross(nrm, tangent);
 			
-			mat3 tbn = mat3(g, tangent, bitangent);
-			
-			vec3 worldNormal = tbn * nrm;
-			
-			float diffuse = max(dot(worldNormal, light), 0.0);
-			float specular = texture2D(uEarthSpec, uv).r * pow(max(dot(worldNormal, normalize(light - rd)), 0.0), 16.0) * 0.8;
+			float diffuse = max(dot(bumpedNormal, light), 0.0);
+			float specular = texture2D(uEarthSpec, uv).r * pow(max(dot(bumpedNormal, normalize(light - rd)), 0.0), 16.0) * 0.8;
 			
 			vec3 col;
 			col = day + specular;
-			col = mix(col, atmos, max(0.1, pow(1.0 - dot(g, -rd), 2.5)));
+			col = mix(col, atmos, max(0.1, pow(1.0 - dot(normal, -rd), 2.5)));
 			col = mix(night, col, diffuse);
-			col = col;
 			
 			gl_FragColor = vec4(col, 1);
 		} else {
